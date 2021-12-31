@@ -1,20 +1,31 @@
+import { useAtom } from "jotai";
 import React from "react";
 import { Button, Image, ScrollView, Text, View } from "react-native";
+import { yourListAtom } from "../../store";
 import MovieList from "./components/MovieList";
-// import { API_URL, API_IMAGE_URL, API_KEY } from "@env";
 
 export default function HomeScreen() {
   const [movies, setMovies] = React.useState([]);
   const [shows, setShows] = React.useState([]);
   const [trending, setTrending] = React.useState([]);
+  const [selected, setSelected] = React.useState(null);
+  const [yourList, setYourList] = useAtom(yourListAtom);
+  function isAddedToYourList(movie) {
+    return yourList.some((m) => m.id === movie.id);
+  }
+  function addToYourList(movie) {
+    setYourList([...yourList, movie]);
+  }
+  function removeFromYourList(movie) {
+    setYourList(yourList.filter((item) => item.id !== movie.id));
+  }
   React.useEffect(() => {
     getPopularTV().then((data) => setShows(data.results));
     getPopularMovies().then((data) => setMovies(data.results));
-    getTrending({ timeWindow: "day" }).then((data) =>
-      setTrending(data.results)
-    );
+    getTrending({ timeWindow: "day" }).then((data) => {
+      setTrending(data.results);
+    });
   }, []);
-  const [selected, setSelected] = React.useState(null);
   return (
     <>
       <ScrollView>
@@ -89,10 +100,18 @@ export default function HomeScreen() {
               minHeight: 20,
             }}
           >
-            <Button
-              title="Add to Your List"
-              onPress={() => setSelected(null)}
-            />
+            {isAddedToYourList(selected) ? (
+              <Button
+                color="red"
+                title="Remove from Your List"
+                onPress={() => removeFromYourList(selected)}
+              ></Button>
+            ) : (
+              <Button
+                title="Add to Your List"
+                onPress={() => addToYourList(selected)}
+              />
+            )}
           </View>
         </View>
       )}

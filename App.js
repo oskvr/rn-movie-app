@@ -1,14 +1,17 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
+import { useAtom } from "jotai";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import HomeScreen from "./screens/home";
 import YourListScreen from "./screens/your-list";
+import { yourListAtom } from "./store";
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+  const [yourList] = useAtom(yourListAtom);
   return (
     <View style={styles.container}>
       <StatusBar style="auto" />
@@ -18,7 +21,8 @@ export default function App() {
           <Tab.Screen
             name="Your List"
             options={{
-              tabBarBadge: 12,
+              tabBarBadge: yourList.length,
+              tabBarBadgeStyle: { opacity: yourList.length ? 1 : 0 },
             }}
             component={YourListScreen}
           />
