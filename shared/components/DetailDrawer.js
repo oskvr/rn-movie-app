@@ -3,10 +3,17 @@ import { useAtom } from "jotai";
 import React from "react";
 import { Image, Pressable, Text, TouchableOpacity, View } from "react-native";
 import { myListAtom, selectedAtom } from "../../store";
-
+import { useFocusEffect } from "@react-navigation/native";
 export default function DetailDrawer({ closeOnRemove = false }) {
   const [selected, setSelected] = useAtom(selectedAtom);
   const [myList, setMyList] = useAtom(myListAtom);
+
+  // Close the drawer on tab change
+  useFocusEffect(
+    React.useCallback(() => {
+      setSelected(null);
+    }, [])
+  );
   if (!selected) return null;
 
   function isInMyList(movie) {
