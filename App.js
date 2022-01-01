@@ -5,26 +5,27 @@ import { useAtom } from "jotai";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import HomeScreen from "./screens/home";
-import YourListScreen from "./screens/your-list";
-import { yourListAtom } from "./store";
+import YourListScreen from "./screens/my-list";
+import { myListAtom } from "./store";
 import { FontAwesome } from "@expo/vector-icons";
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
-  const [yourList] = useAtom(yourListAtom);
+  const [yourList] = useAtom(myListAtom);
   return (
     <View style={styles.container}>
-      <StatusBar style="auto" />
+      <StatusBar style="inverted" />
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
+            headerShown: false,
             tabBarIcon: ({ focused, color, size }) => {
               let iconName;
 
               if (route.name === "Home") {
                 iconName = focused ? "home" : "home";
-              } else if (route.name === "Your List") {
+              } else if (route.name === "My List") {
                 iconName = focused ? "heart" : "heart";
               }
 
@@ -35,7 +36,7 @@ export default function App() {
         >
           <Tab.Screen name="Home" component={HomeScreen} />
           <Tab.Screen
-            name="Your List"
+            name="My List"
             options={{
               tabBarBadge: yourList.length,
               tabBarBadgeStyle: { opacity: yourList.length ? 1 : 0 },

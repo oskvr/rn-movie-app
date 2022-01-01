@@ -1,24 +1,29 @@
 import { useAtom } from "jotai";
 import React from "react";
-import { Button, Image, ScrollView, Text, View } from "react-native";
-import { yourListAtom } from "../../store";
-import MovieList from "./components/MovieList";
-
+import {
+  Button,
+  Image,
+  Pressable,
+  ScrollView,
+  Text,
+  View,
+  Keyboard,
+  TouchableOpacity,
+  TextInput,
+} from "react-native";
+import { myListAtom } from "../../store";
+import CategoryList from "./components/CategoryList";
+import { FontAwesome } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import DetailDrawer from "../../shared/components/DetailDrawer";
 export default function HomeScreen() {
   const [movies, setMovies] = React.useState([]);
   const [shows, setShows] = React.useState([]);
   const [trending, setTrending] = React.useState([]);
-  const [selected, setSelected] = React.useState(null);
-  const [yourList, setYourList] = useAtom(yourListAtom);
-  function isAddedToYourList(movie) {
-    return yourList.some((m) => m.id === movie.id);
-  }
-  function addToYourList(movie) {
-    setYourList([...yourList, movie]);
-  }
-  function removeFromYourList(movie) {
-    setYourList(yourList.filter((item) => item.id !== movie.id));
-  }
+  const [yourList, setYourList] = useAtom(myListAtom);
+  const [topBarOpacity, setTopBarOpacity] = React.useState(0);
+  const [isSearching, setIsSearching] = React.useState(false);
+  const searchInput = React.useRef(null);
   React.useEffect(() => {
     getPopularTV().then((data) => setShows(data.results));
     getPopularMovies().then((data) => setMovies(data.results));
@@ -26,95 +31,91 @@ export default function HomeScreen() {
       setTrending(data.results);
     });
   }, []);
+
+  React.useEffect(() => {
+    if (!isSearching) {
+      Keyboard.dismiss();
+    } else {
+      searchInput.current.focus();
+    }
+  }, [isSearching]);
+  function handleScroll(event) {
+    const scrollY = event.nativeEvent.contentOffset.y;
+    const opacity = scrollY / 500;
+    if (opacity > 0.8) return;
+    setTopBarOpacity(opacity);
+  }
   return (
     <>
-      <ScrollView>
-        <MovieList
-          data={trending}
-          title={"Trending"}
-          setSelected={setSelected}
-        />
-        <MovieList
-          data={movies}
-          title={"Popular Movies"}
-          setSelected={setSelected}
-        />
-        <MovieList
-          data={shows}
-          title={"Popular Shows"}
-          setSelected={setSelected}
-        />
-      </ScrollView>
-      {selected && (
+      <View
+        style={{
+          position: "absolute",
+          top: 0,
+          zIndex: 10,
+          minHeight: 50,
+          width: "100%",
+          backgroundColor: `rgba(0,0,0,${topBarOpacity})`,
+          paddingVertical: 30,
+        }}
+      >
         <View
           style={{
             display: "flex",
-            position: "absolute",
-            bottom: 0,
-            left: 0,
-            backgroundColor: "white",
-            width: "100%",
-            padding: 10,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
           }}
         >
-          <View style={{ position: "absolute", top: 2, right: 2 }}>
-            <Button title="X" color="red" onPress={() => setSelected(null)} />
-          </View>
-          <View
-            style={{
-              display: "flex",
-              flex: 1,
-              flexDirection: "row",
-              minHeight: 150,
-              marginBottom: 10,
-            }}
-          >
-            <Image
-              style={{ height: "100%", borderRadius: 5, width: 100 }}
-              source={{
-                uri: `${process.env.API_IMAGE_URL}${selected.poster_path}`,
-              }}
+          <TouchableOpacity onPress={() => setIsSearching(!isSearching)}>
+            <FontAwesome
+              name={isSearching ? "close" : "search"}
+              size={25}
+              color="white"
             />
-            <View style={{ padding: 15, flex: 1 }}>
-              <Text style={{ fontSize: 20, fontWeight: "700" }}>
-                {selected.title || selected.name}
-              </Text>
-              <View
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  width: 150,
-                  justifyContent: "space-between",
-                }}
-              >
-                <Text>2002</Text>
-                <Text>13+</Text>
-                <Text>2h 12m</Text>
-              </View>
-              <Text>{selected.overview}</Text>
-            </View>
-          </View>
-          <View
-            style={{
-              minHeight: 20,
-            }}
-          >
-            {isAddedToYourList(selected) ? (
-              <Button
-                color="red"
-                title="Remove from Your List"
-                onPress={() => removeFromYourList(selected)}
-              ></Button>
-            ) : (
-              <Button
-                title="Add to Your List"
-                onPress={() => addToYourList(selected)}
-              />
-            )}
-          </View>
+          </TouchableOpacity>
         </View>
-      )}
+        <TextInput
+          ref={searchInput}
+          placeholder="Search"
+          clearButtonMode="always"
+          style={{
+            display: isSearching ? "flex" : "none",
+            width: "80%",
+            alignSelf: "center",
+            marginTop: 10,
+            paddingVertical: 10,
+            paddingHorizontal: 20,
+            backgroundColor: "white",
+          }}
+        />
+      </View>
+      <ScrollView onScroll={handleScroll}>
+        <View style={{ position: "relative", width: "100%", height: 550 }}>
+          <LinearGradient
+            colors={["rgba(0,0,0,0.4)", "transparent"]}
+            style={{
+              position: "absolute",
+              top: 0,
+              width: "100%",
+              height: "100%",
+              zIndex: 10,
+            }}
+          ></LinearGradient>
+          <Image
+            style={{ width: "100%", height: "100%" }}
+            source={{
+              uri: `${process.env.API_IMAGE_URL_ORIGINAL}${trending[5]?.poster_path}`,
+            }}
+          />
+        </View>
+        {yourList.length > 0 && (
+          <CategoryList data={yourList} title={"My List"} />
+        )}
+        <CategoryList data={trending} title={"Trending"} />
+        <CategoryList data={movies} title={"Popular Movies"} />
+        <CategoryList data={shows} title={"Popular Shows"} />
+      </ScrollView>
+      <DetailDrawer />
     </>
   );
 }
